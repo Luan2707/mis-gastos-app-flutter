@@ -37,7 +37,7 @@ choco install flutter
 cd C:\mis_gastos_app
 ```
 
-### 3. **Instalar dependencias**
+### 3. **Instalar dependencias**.
 
 ```bash
 flutter pub get
