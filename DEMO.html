@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Gastos App - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            height: 100vh;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .screen {
+            display: none;
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* LOGIN SCREEN */
+        .login-screen {
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            gap: 30px;
+        }
+
+        .login-screen h1 {
+            color: white;
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: white;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* HOME SCREEN */
+        .home-screen {
+            background: #f5f7fa;
+            gap: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h2 {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .header button {
+            background: #ff6b6b;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 25px;
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .summary-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .summary-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            padding: 8px 0;
+        }
+
+        .income { color: #51cf66; }
+        .expense { color: #ff8787; }
+
+        .transactions-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .transactions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .transaction-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .transaction-icon {
+            font-size: 28px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+            border-radius: 8px;
+        }
+
+        .transaction-info {
+            flex: 1;
+        }
+
+        .transaction-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .transaction-category {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .transaction-amount {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .income-amount { color: #51cf66; }
+        .expense-amount { color: #ff6b6b; }
+
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: #667eea;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .fab:active {
+            transform: scale(0.95);
+        }
+
+        /* ADD TRANSACTION SCREEN */
+        .add-screen {
+            background: #f5f7fa;
+            justify-content: flex-start;
+            gap: 20px;
+            padding-top: 30px;
+        }
+
+        .add-screen h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .radio-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .radio-item input[type="radio"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+
+        .date-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .form-actions button {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-save {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #5568d3;
+        }
+
+        .btn-cancel {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .btn-cancel:hover {
+            background: #dee2e6;
+        }
+
+        .view-all-link {
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .view-all-link:hover {
+            text-decoration: underline;
+        }
+
+        /* TRANSACTIONS LIST SCREEN */
+        .transactions-screen {
+            background: #f5f7fa;
+            gap: 15px;
+            padding-top: 10px;
+        }
+
+        .transactions-screen h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .delete-btn {
+            background: #ff6b6b;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: auto;
+        }
+
+        .delete-btn:hover {
+            background: #ff5252;
+        }
+
+        .transaction-item.delete-mode {
+            background: #ffe0e0;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateX(-50%) translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .modal-content h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .modal-content p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- LOGIN SCREEN -->
+        <div class="screen login-screen active" id="login">
+            <h1>Mis Gastos</h1>
+            <div style="width: 100%; max-width: 300px;">
+                <div class="form-group">
+                    <label>Correo</label>
+                    <input type="email" id="loginEmail" placeholder="usuario@example.com" value="test@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" value="123456">
+                </div>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="goHome()">Iniciar Sesión</button>
+                    <button class="btn-secondary" onclick="toggleLoginMode()">Registrarse</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- HOME SCREEN -->
+        <div class="screen home-screen" id="home">
+            <div class="header">
+                <h2>Resumen</h2>
+                <button onclick="logout()">Salir</button>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-label">Balance Actual</div>
+                <div class="summary-value">$10,500.00</div>
+                <div class="summary-row">
+                    <span>Ingresos:</span>
+                    <span class="income">+ $25,000.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Gastos:</span>
+                    <span class="expense">- $14,500.00</span>
+                </div>
+            </div>
+
+            <div class="transactions-section">
+                <h3>
+                    Últimas Transacciones
+                    <span class="view-all-link" onclick="showAllTransactions()">Ver todas →</span>
+                </h3>
+                <div class="transactions-list">
+                    <div class="transaction-item">
+                        <div class="transaction-icon">🍕</div>
+                        <div class="transaction-info">
+                            <div class="transaction-name">Pizza</div>
+                            <div class="transaction-category">Comida • Hoy</div>
+                        </div>
+                        <div class="transaction-amount expense-amount">-$45.00</div>
+                    </div>
+                    <div class="transaction-item">
+                        <div class="transaction-icon">🚕</div>
+                        <div class="transaction-info">
+                            <div class="transaction-name">Uber</div>
+                            <div class="transaction-category">Transporte • Ayer</div>
+                        </div>
+                        <div class="transaction-amount expense-amount">-$12.50</div>
+                    </div>
+                    <div class="transaction-item">
+                        <div class="transaction-icon">💼</div>
+                        <div class="transaction-info">
+                            <div class="transaction-name">Salario</div>
+                            <div class="transaction-category">Ingresos • 30 ago</div>
+                        </div>
+                        <div class="transaction-amount income-amount">+$3,000.00</div>
+                    </div>
+                    <div class="transaction-item">
+                        <div class="transaction-icon">🎬</div>
+                        <div class="transaction-info">
+                            <div class="transaction-name">Netflix</div>
+                            <div class="transaction-category">Entretenimiento • 28 ago</div>
+                        </div>
+                        <div class="transaction-amount expense-amount">-$15.99</div>
+                    </div>
+                    <div class="transaction-item">
+                        <div class="transaction-icon">💊</div>
+                        <div class="transaction-info">
+                            <div class="transaction-name">Farmacia</div>
+                            <div class="transaction-category">Salud • 27 ago</div>
+                        </div>
+                        <div class="transaction-amount expense-amount">-$25.50</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADD TRANSACTION SCREEN -->
+        <div class="screen add-screen" id="addTransaction">
+            <div style="margin-bottom: 20px;">
+                <button class="btn-cancel" onclick="goHome()" style="width: 40px; padding: 8px; border-radius: 50%; text-align: center;">← </button>
+            </div>
+            <h2>Nueva Transacción</h2>
+
+            <div class="form-group">
+                <label>Tipo:</label>
+                <div class="radio-group">
+                    <label class="radio-item">
+                        <input type="radio" name="type" value="expense" checked>
+                        📉 Gasto
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="type" value="income">
+                        📈 Ingreso
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Descripción</label>
+                <input type="text" id="description" placeholder="Ej: Almuerzo" value="">
+            </div>
+
+            <div class="form-group">
+                <label>Monto</label>
+                <input type="number" id="amount" placeholder="0.00" value="">
+            </div>
+
+            <div class="form-group">
+                <label>Categoría</label>
+                <select id="category">
+                    <option>🍕 Comida</option>
+                    <option>🚕 Transporte</option>
+                    <option>⚡ Utilidades</option>
+                    <option>🎬 Entretenimiento</option>
+                    <option>🛍️ Compras</option>
+                    <option>💊 Salud</option>
+                    <option>📚 Educación</option>
+                    <option>❓ Otros</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Fecha</label>
+                <input type="date" id="date" class="date-input" value="2026-08-31">
+            </div>
+
+            <div class="form-actions">
+                <button class="btn-save" onclick="saveTransaction()">Guardar</button>
+                <button class="btn-cancel" onclick="goHome()">Cancelar</button>
+            </div>
+        </div>
+
+        <!-- ALL TRANSACTIONS SCREEN -->
+        <div class="screen transactions-screen" id="allTransactions">
+            <div style="margin-bottom: 10px;">
+                <button class="btn-cancel" onclick="goHome()" style="width: 40px; padding: 8px; border-radius: 50%; text-align: center;">← </button>
+            </div>
+            <h2>Todas las Transacciones</h2>
+            <div class="transactions-list" id="allTransactionsList">
+                <div class="transaction-item">
+                    <div class="transaction-icon">🍕</div>
+                    <div class="transaction-info">
+                        <div class="transaction-name">Pizza</div>
+                        <div class="transaction-category">Comida • 31 ago</div>
+                    </div>
+                    <div class="transaction-amount expense-amount">-$45.00</div>
+                    <button class="delete-btn" onclick="deleteTransaction(this)">Eliminar</button>
+                </div>
+                <div class="transaction-item">
+                    <div class="transaction-icon">🚕</div>
+                    <div class="transaction-info">
+                        <div class="transaction-name">Uber</div>
+                        <div class="transaction-category">Transporte • 30 ago</div>
+                    </div>
+                    <div class="transaction-amount expense-amount">-$12.50</div>
+                    <button class="delete-btn" onclick="deleteTransaction(this)">Eliminar</button>
+                </div>
+                <div class="transaction-item">
+                    <div class="transaction-icon">💼</div>
+                    <div class="transaction-info">
+                        <div class="transaction-name">Salario</div>
+                        <div class="transaction-category">Ingresos • 30 ago</div>
+                    </div>
+                    <div class="transaction-amount income-amount">+$3,000.00</div>
+                    <button class="delete-btn" onclick="deleteTransaction(this)">Eliminar</button>
+                </div>
+                <div class="transaction-item">
+                    <div class="transaction-icon">🎬</div>
+                    <div class="transaction-info">
+                        <div class="transaction-name">Netflix</div>
+                        <div class="transaction-category">Entretenimiento • 28 ago</div>
+                    </div>
+                    <div class="transaction-amount expense-amount">-$15.99</div>
+                    <button class="delete-btn" onclick="deleteTransaction(this)">Eliminar</button>
+                </div>
+                <div class="transaction-item">
+                    <div class="transaction-icon">💊</div>
+                    <div class="transaction-info">
+                        <div class="transaction-name">Farmacia</div>
+                        <div class="transaction-category">Salud • 27 ago</div>
+                    </div>
+                    <div class="transaction-amount expense-amount">-$25.50</div>
+                    <button class="delete-btn" onclick="deleteTransaction(this)">Eliminar</button>
+                </div>
+                <div class="transaction-item">
+                    <div class="transaction-icon">🛍️</div>
+                    <div class="transaction-info">
+                        <div class="transaction-name">Zapatos</div>
+                        <div class="transaction-category">Compras • 25 ago</div>
+                    </div>
+                    <div class="transaction-amount expense-amount">-$89.99</div>
+                    <button class="delete-btn" onclick="deleteTransaction(this)">Eliminar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAB Button -->
+        <button class="fab" id="fab" onclick="showAddTransaction()" style="display: none;">+</button>
+    </div>
+
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <h3>¿Eliminar transacción?</h3>
+            <p>Esta acción no se puede deshacer</p>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="cancelDelete()">Cancelar</button>
+                <button class="btn-save" onclick="confirmDelete()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentScreen = 'login';
+        let toDeleteElement = null;
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            currentScreen = screenId;
+            
+            if (screenId === 'home') {
+                document.getElementById('fab').style.display = 'flex';
+            } else {
+                document.getElementById('fab').style.display = 'none';
+            }
+        }
+
+        function goHome() {
+            showScreen('home');
+        }
+
+        function showAddTransaction() {
+            showScreen('addTransaction');
+        }
+
+        function showAllTransactions() {
+            showScreen('allTransactions');
+        }
+
+        function logout() {
+            showScreen('login');
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        function saveTransaction() {
+            const description = document.getElementById('description').value;
+            const amount = document.getElementById('amount').value;
+            
+            if (!description || !amount) {
+                showToast('Completa todos los campos');
+                return;
+            }
+
+            showToast('✓ Transacción guardada');
+            setTimeout(() => goHome(), 800);
+        }
+
+        function deleteTransaction(btn) {
+            toDeleteElement = btn.parentElement;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        function confirmDelete() {
+            toDeleteElement.remove();
+            document.getElementById('confirmModal').classList.remove('active');
+            showToast('✓ Transacción eliminada');
+        }
+
+        function cancelDelete() {
+            document.getElementById('confirmModal').classList.remove('active');
+            toDeleteElement = null;
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 2000);
+        }
+
+        function toggleLoginMode() {
+            showToast('Modo registro activado (Demo)');
+        }
+    </script>
+</body>
+</html>
