@@ -1,4 +1,4 @@
-# Mis Gastos - App de Control de Ingresos y Gastos
+# Mis Gastos - App de Control de Ingresos y Gastos.
 
 Una aplicación Flutter para Android para gestionar tus gastos e ingresos en la nube con Firebase.
 
