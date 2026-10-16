@@ -202,4 +202,4 @@ Si tienes dudas o sugerencias:
 
 ---
 
-**¡Hecho con ❤️ para gestionar tus finanzas personales!**
+**¡Hecho con ❤️ para gestionar tus finanzas personales!* *
