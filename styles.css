@@ -1,0 +1,1959 @@
+/* ==========================================================================
+   MIS GASTOS & AUTOCONTROL PRO — DISEÑO MINIMALISTA E INTUITIVO
+   Basado en las capturas de referencia:
+   - Cabecera amarilla limpia (#f5d042) con Mes | Gastos | Ingresos | Saldo
+   - Lista diaria agrupada por fecha con íconos circulares minimalistas
+   - Modal "Agregar" (Gasto | Ingreso | Deuda) con cuadrícula de 4 columnas
+     y cápsula inferior "¿Para qué y cuánto cuesta?"
+   - Separación total entre Gastos/Ingresos diarios y Deudas/Tarjetas por pagar
+   ========================================================================== */
+
+:root {
+  /* Paleta Minimalista Clara (Por Defecto - Inspirada en Fotos 1, 2 y 3) */
+  --mg-yellow: #f6d34e;
+  --mg-yellow-dark: #eab308;
+  --mg-yellow-ink: #111827;
+
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --bg-input: #f1f5f9;
+  --bg-subtle: #f3f4f6;
+
+  --border-color: #e5e7eb;
+  --border-strong: #d1d5db;
+
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+
+  --accent-primary: #111827;
+  --accent-success: #10b981;
+  --accent-danger: #ef4444;
+  --accent-warning: #f59e0b;
+  --accent-info: #0284c7;
+
+  --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+
+  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 6px 20px rgba(0, 0, 0, 0.06);
+  --transition: all 0.2s ease;
+}
+
+/* Tema Oscuro Opcional */
+body.theme-dark {
+  --bg-primary: #0b0f19;
+  --bg-secondary: #111827;
+  --bg-card: #161f33;
+  --bg-card-hover: #1e293b;
+  --bg-input: #1e293b;
+  --bg-subtle: #1e293b;
+
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: 5.5rem;
+}
+
+/* ==========================================================================
+   CABECERA AMARILLA ("MIS GASTOS" - FOTO 3)
+   ========================================================================== */
+
+.mg-header {
+  background: var(--mg-yellow);
+  color: var(--mg-yellow-ink);
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.mg-header-top {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0.65rem 1rem 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.mg-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.mg-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.02em;
+}
+
+.mg-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.35);
+  color: #111827;
+  font-size: 1.05rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.mg-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.mg-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Pestañas en escritorio dentro de la barra amarilla */
+.desktop-quick-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(0, 0, 0, 0.07);
+  padding: 0.22rem;
+  border-radius: var(--radius-full);
+}
+
+.dq-tab {
+  border: none;
+  background: transparent;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.38rem 0.8rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.dq-tab:hover {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.dq-tab.active {
+  background: #111827;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.mg-add-top-btn {
+  border: none;
+  background: #111827;
+  color: #f6d34e;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  transition: var(--transition);
+}
+
+.mg-add-top-btn:hover {
+  transform: translateY(-1px);
+  background: #000000;
+}
+
+/* Strip de Resumen (Mes | Gastos | Ingresos | Saldo - Foto 3) */
+.mg-summary-strip {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0.45rem 1rem 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.mg-month-picker-box {
+  background: rgba(0, 0, 0, 0.06);
+  border-right: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 0.3rem 0.85rem 0.3rem 0.65rem;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  min-width: 92px;
+}
+
+.mg-year-label {
+  font-size: 0.72rem;
+  color: rgba(17, 24, 39, 0.7);
+  font-weight: 600;
+}
+
+.mg-month-select {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #111827;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+}
+
+.mg-summary-metrics {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.mg-metric-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.mg-metric-label {
+  font-size: 0.78rem;
+  color: rgba(17, 24, 39, 0.72);
+  font-weight: 500;
+}
+
+.mg-metric-val {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.02em;
+}
+
+/* ==========================================================================
+   CONTENEDOR PRINCIPAL Y PESTAÑAS
+   ========================================================================== */
+
+.mg-main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.tab-content-pane {
+  display: none;
+  animation: fadeIn 0.18s ease;
+}
+
+.tab-content-pane.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Barra sutil de separación y filtros rápidos */
+.mg-separation-pill-bar {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.9rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.mg-sep-info {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.link-inline-btn {
+  background: none;
+  border: none;
+  color: var(--accent-info);
+  font-weight: 700;
+  font-family: inherit;
+  font-size: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.mg-flow-filters {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.flow-pill {
+  border: 1px solid var(--border-color);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.flow-pill.active {
+  background: #111827;
+  color: #f6d34e;
+  border-color: #111827;
+}
+
+body.theme-dark .flow-pill.active {
+  background: #f6d34e;
+  color: #111827;
+  border-color: #f6d34e;
+}
+
+/* Buscador minimalista */
+.mg-search-row {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 0.45rem 0.9rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.mg-search-icon {
+  font-size: 0.9rem;
+  opacity: 0.65;
+}
+
+.mg-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.mg-btn-text {
+  border: none;
+  background: var(--mg-yellow);
+  color: #111827;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.32rem 0.75rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   LISTA DIARIA AGRUPADA POR FECHA (IDÉNTICA A FOTO 3)
+   ========================================================================== */
+
+.mg-daily-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.mg-day-group {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+}
+
+.mg-day-header {
+  padding: 0.55rem 1rem;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.mg-day-date-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.mg-day-totals-right {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  font-size: 0.78rem;
+}
+
+.mg-day-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.mg-movement-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.78rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  transition: var(--transition);
+  gap: 0.75rem;
+}
+
+.mg-movement-row:last-child {
+  border-bottom: none;
+}
+
+.mg-movement-row:hover {
+  background: var(--bg-card-hover);
+}
+
+.mg-mov-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Ícono circular colorido al estilo Foto 3 */
+.mg-mov-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.mg-mov-texts {
+  min-width: 0;
+  flex: 1;
+}
+
+.mg-mov-title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mg-mov-sub {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.1rem;
+}
+
+.mg-mov-right {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+
+.mg-mov-amount {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.mg-mov-amount.is-income {
+  color: #059669;
+}
+
+body.theme-dark .mg-mov-amount.is-income {
+  color: #34d399;
+}
+
+.mg-mov-del-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  opacity: 0.45;
+  padding: 0.25rem;
+  border-radius: 6px;
+  transition: var(--transition);
+}
+
+.mg-mov-del-btn:hover {
+  opacity: 1;
+  color: var(--accent-danger);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* ==========================================================================
+   MODAL "AGREGAR" (IDÉNTICO A FOTOS 1 Y 2)
+   ========================================================================== */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+}
+
+.modal-backdrop.active {
+  display: flex;
+}
+
+.mg-add-sheet {
+  width: 100%;
+  max-width: 480px;
+  max-height: 92vh;
+  background: var(--bg-secondary);
+  border-radius: 24px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.mg-add-sheet-header {
+  background: var(--mg-yellow);
+  color: #111827;
+  padding: 0.85rem 1.1rem 0.95rem;
+}
+
+.mg-add-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.mg-cancel-link {
+  border: none;
+  background: transparent;
+  color: #111827;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.mg-add-sheet-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.mg-selected-cat-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.1);
+  color: #111827;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+}
+
+/* Selector Segmentado Gasto | Ingreso | Deuda (Fotos 1 y 2) */
+.mg-segmented-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1.5px solid #111827;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--mg-yellow);
+}
+
+.mg-seg-btn {
+  border: none;
+  border-right: 1px solid #111827;
+  background: transparent;
+  color: #111827;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.48rem 0.4rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.mg-seg-btn:last-child {
+  border-right: none;
+}
+
+.mg-seg-btn.active {
+  background: #111827;
+  color: var(--mg-yellow);
+  font-weight: 700;
+}
+
+/* Cuerpo con Cuadrícula de 4 Columnas (Fotos 1 y 2) */
+.mg-add-sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.15rem 0.85rem;
+  background: var(--bg-secondary);
+}
+
+.mg-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.05rem 0.5rem;
+}
+
+.mg-cat-item {
+  border: none;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text-primary);
+  transition: transform 0.15s ease;
+}
+
+.mg-cat-item:hover {
+  transform: translateY(-2px);
+}
+
+.mg-cat-circle {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: var(--bg-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.45rem;
+  transition: var(--transition);
+  border: 2px solid transparent;
+}
+
+.mg-cat-item.active .mg-cat-circle {
+  background: var(--mg-yellow);
+  border-color: #111827;
+  transform: scale(1.06);
+  box-shadow: 0 4px 12px rgba(246, 211, 78, 0.45);
+}
+
+.mg-cat-label {
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+  line-height: 1.15;
+  max-width: 82px;
+  word-wrap: break-word;
+}
+
+.mg-cat-item.active .mg-cat-label {
+  font-weight: 800;
+}
+
+/* Barra Inferior Minimalista "¿Para qué y cuánto cuesta?" */
+.mg-add-bottom-bar {
+  padding: 0.75rem 0.9rem 1rem;
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.mg-bottom-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.mg-meta-field {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.mg-mini-select,
+.mg-mini-date {
+  border: 1px solid var(--border-strong);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.76rem;
+  padding: 0.25rem 0.45rem;
+  border-radius: 8px;
+  outline: none;
+}
+
+.mg-input-capsule {
+  display: flex;
+  align-items: center;
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  padding: 0.3rem 0.35rem 0.3rem 0.95rem;
+  gap: 0.4rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.mg-input-capsule:focus-within {
+  border-color: #111827;
+}
+
+.mg-capsule-note {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  min-width: 0;
+}
+
+.mg-capsule-amount-box {
+  display: flex;
+  align-items: center;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-full);
+  padding: 0.3rem 0.65rem;
+  gap: 0.2rem;
+}
+
+.mg-currency-sign {
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.mg-capsule-amount {
+  width: 88px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+  font-weight: 700;
+  outline: none;
+}
+
+.mg-capsule-submit {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: var(--mg-yellow);
+  color: #111827;
+  font-size: 1.1rem;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.mg-capsule-submit:hover {
+  background: var(--mg-yellow-dark);
+  transform: scale(1.05);
+}
+
+/* ==========================================================================
+   AUTOCONTROL PRO & UBER (MAZDA AXELA VFCW14 - FOTOS 4 Y 5)
+   ========================================================================== */
+
+.veh-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.veh-section-heading {
+  font-size: 1.3rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.veh-pro-badge {
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: white;
+  font-size: 0.65rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+
+.veh-section-sub {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.veh-quick-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.btn-veh {
+  border: none;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.5rem 0.9rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.btn-veh-fuel { background: #f59e0b; color: #111827; }
+.btn-veh-uber { background: #10b981; color: #ffffff; }
+.btn-veh-exp  { background: #4f46e5; color: #ffffff; }
+.btn-veh-cfg  { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-strong); }
+
+.btn-veh:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+/* Hero Card del Mazda Axela (Foto 4) */
+.veh-hero-card {
+  background: linear-gradient(135deg, #111827 0%, #1f2937 60%, #3b0d16 100%);
+  color: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1.35rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-card);
+  flex-wrap: wrap;
+}
+
+.veh-hero-photo-box {
+  width: 210px;
+  height: 128px;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.veh-hero-photo-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.veh-soulred-tag {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: #dc2626;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+}
+
+.veh-hero-details {
+  flex: 1;
+  min-width: 240px;
+}
+
+.veh-tags-row {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.45rem;
+}
+
+.veh-tag-plate {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.18rem 0.55rem;
+  border-radius: 6px;
+}
+
+.veh-tag-year {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  font-size: 0.75rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 6px;
+}
+
+.veh-tag-color {
+  background: rgba(220, 38, 38, 0.25);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+  font-size: 0.75rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 6px;
+}
+
+.veh-model-title {
+  font-size: 1.75rem;
+  font-weight: 900;
+  margin-bottom: 0.4rem;
+}
+
+.veh-stats-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.1rem;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+/* 3 Tarjetas de Inversión (Foto 4) */
+.veh-inv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+.veh-inv-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.veh-inv-lbl {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+}
+
+.veh-inv-num {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.veh-inv-num.danger { color: #ef4444; }
+.veh-inv-num.info   { color: #0284c7; }
+body.theme-dark .veh-inv-num.info { color: #38bdf8; }
+
+.veh-inv-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* 4 Mini KPIs (Foto 4) */
+.veh-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.veh-mini-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.veh-mini-ic {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.veh-mini-ic.fuel  { background: rgba(245, 158, 11, 0.15); }
+.veh-mini-ic.maint { background: rgba(2, 132, 199, 0.15); }
+.veh-mini-ic.clean { background: rgba(236, 72, 153, 0.15); }
+.veh-mini-ic.month { background: rgba(99, 102, 241, 0.15); }
+
+.veh-mini-lbl {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.veh-mini-val {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.veh-mini-sub {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* Banner de Uber (Foto 4) */
+.veh-uber-banner {
+  background: linear-gradient(135deg, #062e22 0%, #0b192c 100%);
+  color: #ffffff;
+  border-radius: var(--radius-md);
+  padding: 1.15rem 1.25rem;
+  margin-bottom: 1.15rem;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.veh-uber-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+
+.veh-uber-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #a7f3d0;
+}
+
+.veh-uber-sub {
+  font-size: 0.76rem;
+  color: #6ee7b7;
+}
+
+.veh-uber-pill {
+  background: #10b981;
+  color: #052e16;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.25rem 0.7rem;
+  border-radius: var(--radius-full);
+}
+
+.veh-uber-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.75rem;
+}
+
+.veh-uber-kpi-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.veh-uber-kpi-lbl {
+  font-size: 0.74rem;
+  color: #cbd5e1;
+}
+
+.veh-uber-kpi-val {
+  font-family: var(--font-mono);
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.veh-uber-kpi-val.pos { color: #34d399; }
+.veh-uber-kpi-val.neg { color: #f87171; }
+
+.veh-uber-kpi-sub {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+/* Tabla de Historial del Vehículo (Foto 5) */
+.veh-logs-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.15rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.veh-logs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+}
+
+.veh-filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.filter-pill {
+  border: 1px solid var(--border-color);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 0.32rem 0.75rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.filter-pill.active {
+  background: #4f46e5;
+  color: #ffffff;
+  border-color: #4f46e5;
+}
+
+.veh-table-scroll {
+  overflow-x: auto;
+}
+
+.veh-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.veh-table th {
+  text-align: left;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  letter-spacing: 0.04em;
+}
+
+.veh-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.badge-veh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.6rem;
+  border-radius: var(--radius-full);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.badge-cat-bencina    { background: rgba(245, 158, 11, 0.16); color: #d97706; }
+.badge-cat-mantencion { background: rgba(2, 132, 199, 0.16); color: #0284c7; }
+.badge-cat-uber       { background: rgba(16, 185, 129, 0.16); color: #059669; }
+.badge-cat-limpieza   { background: rgba(236, 72, 153, 0.16); color: #db2777; }
+.badge-cat-otrosveh   { background: rgba(100, 116, 139, 0.16); color: #475569; }
+
+body.theme-dark .badge-cat-bencina    { color: #fbbf24; }
+body.theme-dark .badge-cat-mantencion { color: #38bdf8; }
+body.theme-dark .badge-cat-uber       { color: #34d399; }
+
+/* ==========================================================================
+   PESTAÑA 3 Y 4: DEUDAS Y TARJETAS SEPARADAS / MIS CUENTAS
+   ========================================================================== */
+
+.debts-header-banner {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-left: 5px solid #ef4444;
+  border-radius: var(--radius-md);
+  padding: 1.15rem 1.25rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.debts-header-banner.accounts-banner {
+  border-left-color: #10b981;
+}
+
+.debts-tag-isolated {
+  display: inline-block;
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  margin-bottom: 0.35rem;
+}
+
+.debts-header-banner h2 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin-bottom: 0.2rem;
+}
+
+.debts-header-banner p {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+}
+
+.debts-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.debts-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.35rem;
+}
+
+.debts-kpi-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.debts-kpi-lbl {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.debts-kpi-val {
+  font-family: var(--font-mono);
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.debts-kpi-val.danger  { color: #ef4444; }
+.debts-kpi-val.warning { color: #f59e0b; }
+
+.debts-kpi-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.section-block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.section-sub-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.cards-minimal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 1rem;
+}
+
+.minimal-card-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.1rem;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.minimal-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.minimal-card-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.minimal-card-thumb {
+  width: 52px;
+  height: 34px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+}
+
+.minimal-card-name {
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.minimal-card-bank {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.minimal-card-numbers {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  background: var(--bg-subtle);
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+}
+
+.mc-num-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.mc-num-lbl {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.mc-num-val {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.progress-bar-track {
+  width: 100%;
+  height: 7px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+}
+
+.minimal-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.mg-btn-outline {
+  border: 1px solid var(--border-strong);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.38rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.mg-btn-outline:hover {
+  background: var(--bg-subtle);
+}
+
+/* Lista de compras en tarjetas (aisladas) */
+.card-debts-list {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+/* Deudas a largo plazo */
+.longterm-minimal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 1rem;
+}
+
+/* Gráficos */
+.charts-minimal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 1rem;
+}
+
+.chart-minimal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.1rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.chart-minimal-card h3 {
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+
+.chart-box-canvas {
+  height: 240px;
+  position: relative;
+}
+
+/* ==========================================================================
+   BARRA INFERIOR CON BOTÓN + AMARILLO CENTRAL (FOTO 3)
+   ========================================================================== */
+
+.mg-bottom-dock {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  max-width: 100%;
+  z-index: 100;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.mg-dock-item {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  cursor: pointer;
+  height: 100%;
+}
+
+.mg-dock-icon {
+  font-size: 1.2rem;
+}
+
+.mg-dock-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.mg-dock-item.active {
+  color: #eab308;
+  font-weight: 800;
+}
+
+body.theme-minimal-light .mg-dock-item.active {
+  color: #111827;
+}
+
+.mg-dock-fab {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 3px solid var(--bg-secondary);
+  background: var(--mg-yellow);
+  color: #111827;
+  font-size: 1.75rem;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: -22px auto 0;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(234, 179, 8, 0.45);
+  transition: var(--transition);
+}
+
+.mg-dock-fab:hover {
+  transform: scale(1.06);
+}
+
+/* ==========================================================================
+   MODALES SECUNDARIOS Y FORMULARIOS
+   ========================================================================== */
+
+.modal-window {
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.modal-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h3 {
+  font-size: 1.02rem;
+  font-weight: 800;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 1.15rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.modal-footer {
+  padding: 0.85rem 1.25rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.form-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.form-input,
+.form-select {
+  border: 1px solid var(--border-strong);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  outline: none;
+}
+
+.btn {
+  border: none;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--mg-yellow);
+  color: #111827;
+}
+
+.btn-secondary {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.mg-toast {
+  position: fixed;
+  bottom: 4.8rem;
+  right: 1rem;
+  z-index: 300;
+  background: #111827;
+  color: #ffffff;
+  padding: 0.65rem 1.1rem;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: all 0.25s ease;
+}
+
+/* ==========================================================================
+   BARRA DE RESÚMENES INTELIGENTES Y CHIPS RÁPIDOS DE MONTO
+   ========================================================================== */
+
+.mg-smart-insights-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 0.85rem;
+}
+
+.smart-insight-chip {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  transition: var(--transition);
+}
+
+.smart-insight-chip:hover {
+  transform: translateY(-2px);
+  border-color: var(--mg-yellow-dark);
+}
+
+.si-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--bg-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.si-lbl {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.si-val {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.si-val.danger  { color: #ef4444; }
+.si-val.warning { color: #d97706; }
+.si-val.success { color: #059669; }
+body.theme-dark .si-val.warning { color: #fbbf24; }
+body.theme-dark .si-val.success { color: #34d399; }
+
+.mg-quick-amount-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.amt-chip {
+  border: 1px solid var(--border-strong);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.22rem 0.55rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.amt-chip:hover {
+  background: var(--mg-yellow);
+  color: #111827;
+  border-color: #111827;
+}
+
+.amt-chip.clear {
+  color: #ef4444;
+  font-family: var(--font-main);
+}
+
+/* ==========================================================================
+   TARJETAS VISUALES CON FOTO REAL (IDÉNTICAS A TU FOTO 4 DE TARJETAS)
+   ========================================================================== */
+
+.cards-visual-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 1.15rem;
+}
+
+.visual-credit-card-box {
+  background: #131a2b;
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 1.1rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.vcc-front {
+  width: 100%;
+  height: 175px;
+  border-radius: 14px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.vcc-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10, 14, 26, 0.35) 0%, rgba(10, 14, 26, 0.85) 100%);
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.vcc-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vcc-bank-pill {
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.22rem 0.65rem;
+  border-radius: 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.vcc-chip {
+  width: 36px;
+  height: 26px;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #d4af37 0%, #f9df7b 50%, #b8860b 100%);
+  border: 1px solid #aa8010;
+}
+
+.vcc-digits {
+  font-family: var(--font-mono);
+  font-size: 1.12rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+
+.vcc-bottom-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.vcc-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #f1f5f9;
+  margin-bottom: 0.25rem;
+}
+
+.vcc-badge-debt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(239, 68, 68, 0.22);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #fca5a5;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.16rem 0.55rem;
+  border-radius: var(--radius-full);
+}
+
+.vcc-holder {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.vcc-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.76rem;
+}
+
+.vcc-quota-row {
+  display: flex;
+  justify-content: space-between;
+  color: #cbd5e1;
+}
+
+.vcc-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.55rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.vcc-due-pill {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+}
+
+.vcc-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #f8fafc;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 0.28rem 0.65rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.vcc-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+@media (max-width: 820px) {
+  .desktop-quick-tabs {
+    display: none;
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  .veh-hero-photo-box {
+    width: 100%;
+    height: 160px;
+  }
+}

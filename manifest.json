@@ -1,0 +1,22 @@
+{
+  "name": "FinanzaPRO - Control de Gastos y Deudas",
+  "short_name": "FinanzaPRO",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0a0e1a",
+  "theme_color": "#0a0e1a",
+  "orientation": "portrait-primary",
+  "description": "Control total de gastos, deudas y tarjetas de crédito (BancoEstado, Falabella, Santander) con sincronización en la nube.",
+  "icons": [
+    {
+      "src": "assets/bancoestado.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "assets/santander.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

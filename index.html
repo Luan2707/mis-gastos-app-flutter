@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mis Gastos & AutoControl — Plataforma Minimalista</title>
+  <meta name="description" content="Control minimalista e intuitivo de gastos e ingresos diarios, separado de deudas/tarjetas por pagar, control de quién me debe y AutoControl PRO (Mazda Axela VFCW14 y Uber).">
+  <meta name="theme-color" content="#f5c842">
+
+  <!-- Web App Manifest (PWA) -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/bancoestado.jpg">
+
+  <!-- Google Fonts: Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Estilos Minimalistas -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-minimal-light">
+
+  <!-- ======================================================================
+       CABECERA PRINCIPAL AMARILLA MINIMALISTA (ESTILO "MIS GASTOS" FOTO 3)
+       ====================================================================== -->
+  <header class="mg-header">
+    <div class="mg-header-top">
+      <div class="mg-brand">
+        <button class="mg-icon-btn" id="btnOpenSettingsModal" title="Copias de seguridad y respaldo">
+          ☰
+        </button>
+        <h1 class="mg-title" id="headerSectionTitle">Mis Gastos</h1>
+      </div>
+
+      <div class="mg-top-actions">
+        <!-- Navegación rápida en escritorio -->
+        <div class="desktop-quick-tabs">
+          <button class="dq-tab active" data-tab="tab-dashboard">📋 Mis Gastos</button>
+          <button class="dq-tab" data-tab="tab-vehicle">🚗 Auto (VFCW14)</button>
+          <button class="dq-tab" data-tab="tab-debts">💳 Deudas (<span id="navBadgeDebtsCount">5</span>)</button>
+          <button class="dq-tab" data-tab="tab-receivables">🤝 Me Deben</button>
+          <button class="dq-tab" data-tab="tab-accounts">🏦 Mis Cuentas</button>
+          <button class="dq-tab" data-tab="tab-charts">📊 Gráficos</button>
+        </div>
+
+        <button class="mg-add-top-btn" id="btnHeaderQuickAdd" title="Agregar Gasto, Ingreso o Deuda">
+          <span>＋</span> Agregar
+        </button>
+        <button class="mg-icon-btn" id="btnToggleTheme" title="Cambiar entre modo claro minimalista y modo oscuro">
+          <span id="themeToggleIcon">🌙</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Barra de Resumen Superior (Idéntica a Foto 3: Mes | Gastos | Ingresos | Saldo) -->
+    <div class="mg-summary-strip" id="headerSummaryStrip">
+      <div class="mg-month-picker-box">
+        <span class="mg-year-label" id="lblSelectedYear">2026</span>
+        <select id="selectMonthFilter" class="mg-month-select" title="Filtrar por mes">
+          <option value="ALL">Todo ▾</option>
+          <option value="2026-11">nov ▾</option>
+          <option value="2026-10">oct ▾</option>
+        </select>
+      </div>
+
+      <div class="mg-summary-metrics">
+        <div class="mg-metric-col">
+          <span class="mg-metric-label">Gastos Pagados</span>
+          <span class="mg-metric-val" id="kpiTotalGastos">0</span>
+        </div>
+        <div class="mg-metric-col">
+          <span class="mg-metric-label">Ingresos</span>
+          <span class="mg-metric-val" id="kpiTotalIngresos">0</span>
+        </div>
+        <div class="mg-metric-col">
+          <span class="mg-metric-label">Saldo Flujo</span>
+          <span class="mg-metric-val" id="kpiSaldoMes">0</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================================================================
+       CONTENIDO PRINCIPAL POR PESTAÑAS
+       ====================================================================== -->
+  <main class="mg-main">
+
+    <!-- ====================================================================
+         PESTAÑA 1: MIS GASTOS E INGRESOS (FLUJO DIARIO - SEPARADO DE DEUDAS)
+         ==================================================================== -->
+    <section class="tab-content-pane active" id="tabPaneDashboard">
+
+      <!-- Mini Resumen Inteligente Rápido (Con acceso a Me Deben y Deudas separadas) -->
+      <div class="mg-smart-insights-bar">
+        <div class="smart-insight-chip" onclick="setActiveTab('tab-debts')" title="Ver las 5 tarjetas que aún no vas a pagar">
+          <span class="si-icon">🔒</span>
+          <div>
+            <span class="si-lbl">Deudas Tarjetas (Separadas)</span>
+            <strong class="si-val danger" id="chipIsolatedDebtTotal">$ 1.854.000</strong>
+          </div>
+        </div>
+        <div class="smart-insight-chip" onclick="setActiveTab('tab-receivables')" title="Ver quién te debe plata (Tía Ceci, amigos, etc.)">
+          <span class="si-icon">🤝</span>
+          <div>
+            <span class="si-lbl">Me Deben (Por Cobrar)</span>
+            <strong class="si-val warning" id="chipReceivablesTotal">$ 33.003</strong>
+          </div>
+        </div>
+        <div class="smart-insight-chip" onclick="setActiveTab('tab-vehicle')" title="Ver ganancias limpias de Uber en tu Mazda Axela">
+          <span class="si-icon">🚕</span>
+          <div>
+            <span class="si-lbl">Ganancia Limpia Uber</span>
+            <strong class="si-val success" id="chipUberNetProfit">+ $ 63.048</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtros Rápidos: Todos | Gastos | Ingresos + Categorías frecuentes -->
+      <div class="mg-separation-pill-bar">
+        <div class="mg-flow-filters">
+          <button class="flow-pill active" data-flow="ALL">Todos</button>
+          <button class="flow-pill" data-flow="GASTOS">📉 Solo Gastos</button>
+          <button class="flow-pill" data-flow="INGRESOS">📈 Solo Ingresos</button>
+          <button class="flow-pill" data-flow="CAT_AUTO">🚗 Solo Auto</button>
+          <button class="flow-pill" data-flow="EFECTIVO">💵 Efectivo</button>
+          <button class="flow-pill" data-flow="BANCOESTADO">🏦 BancoEstado</button>
+        </div>
+        <button type="button" class="mg-btn-text" id="btnOpenAddMovementInline">＋ Agregar Rápido</button>
+      </div>
+
+      <!-- Buscador minimalista -->
+      <div class="mg-search-row">
+        <span class="mg-search-icon">🔍</span>
+        <input type="text" id="inputSearchExpenses" class="mg-search-input" placeholder="Buscar por nombre o monto (ej: gasolina, claro tia ceci, disco, cadena, ali expres, uber)...">
+      </div>
+
+      <!-- Lista Diaria Agrupada por Fecha (Idéntica a Foto 3) -->
+      <div class="mg-daily-timeline" id="dailyTimelineContainer">
+        <!-- Renderizado dinámicamente por día en app.js -->
+      </div>
+
+    </section>
+
+    <!-- ====================================================================
+         PESTAÑA 2: AUTOCONTROL PRO & UBER (MAZDA AXELA VFCW14 - FOTOS 4 Y 5)
+         ==================================================================== -->
+    <section class="tab-content-pane" id="tabPaneVehicle">
+
+      <div class="veh-top-bar">
+        <div>
+          <h2 class="veh-section-heading">
+            🚗 AutoControl <span class="veh-pro-badge">PRO</span>
+          </h2>
+          <p class="veh-section-sub">
+            Control exhaustivo de tu <strong>Mazda Axela (VFCW14)</strong>, bencina, mantenciones y ganancias de <strong>Uber</strong>
+          </p>
+        </div>
+        <div class="veh-quick-buttons">
+          <button class="btn-veh btn-veh-fuel" id="btnOpenFastFuelModal">⛽ Bencina Rápida</button>
+          <button class="btn-veh btn-veh-uber" id="btnOpenUberShiftModal">🚕 Turno Uber</button>
+          <button class="btn-veh btn-veh-exp" id="btnOpenVehicleExpenseModal">＋ Nuevo Gasto</button>
+          <button class="btn-veh btn-veh-cfg" id="btnOpenEditVehicleModal">⚙️ Datos Auto</button>
+        </div>
+      </div>
+
+      <!-- Tarjeta Principal del Mazda Axela (Foto 4) -->
+      <div class="veh-hero-card">
+        <div class="veh-hero-photo-box">
+          <img src="assets/mazda_axela.jpg" alt="Mazda Axela Rojo Soul Red" id="imgVehicleDisplay" onerror="this.src='assets/bancoestado.jpg'">
+          <span class="veh-soulred-tag">SOUL RED</span>
+        </div>
+
+        <div class="veh-hero-details">
+          <div class="veh-tags-row">
+            <span class="veh-tag-plate" id="vehPlateBadge">VFCW14</span>
+            <span class="veh-tag-year" id="vehYearBadge">Año 2017</span>
+            <span class="veh-tag-color" id="vehColorBadge">🔴 Rojo Soul Red</span>
+          </div>
+          <h3 class="veh-model-title" id="vehTitleDisplay">Mazda Axela</h3>
+          <div class="veh-stats-inline">
+            <span>🏁 Odómetro: <strong id="vehOdometerDisplay">95.000 km</strong></span>
+            <span>📅 Adquirido: <strong id="vehAcquiredDisplay">22/10/2026</strong></span>
+            <span>🚕 Estado Uber: <strong style="color: #10b981;">Habilitado</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 Tarjetas Grandes de Inversión (Foto 4) -->
+      <div class="veh-inv-grid">
+        <div class="veh-inv-box">
+          <span class="veh-inv-lbl">PRECIO COMPRA AUTO</span>
+          <strong class="veh-inv-num" id="vehKpiPurchasePrice">$ 4.800.000</strong>
+          <span class="veh-inv-sub">Inversión inicial vehículo</span>
+        </div>
+        <div class="veh-inv-box">
+          <span class="veh-inv-lbl">GASTOS OPERATIVOS</span>
+          <strong class="veh-inv-num danger" id="vehKpiOperatingExpenses">$ 345.000</strong>
+          <span class="veh-inv-sub" id="vehKpiOperatingSub">6 gastos registrados</span>
+        </div>
+        <div class="veh-inv-box">
+          <span class="veh-inv-lbl">INVERSIÓN TOTAL ACUMULADA</span>
+          <strong class="veh-inv-num info" id="vehKpiTotalInvestment">$ 5.145.000</strong>
+          <span class="veh-inv-sub">Auto + Gastos realizados</span>
+        </div>
+      </div>
+
+      <!-- 4 Mini KPIs (Foto 4) -->
+      <div class="veh-mini-grid">
+        <div class="veh-mini-box">
+          <div class="veh-mini-ic fuel">⛽</div>
+          <div>
+            <span class="veh-mini-lbl">Combustible Total</span>
+            <strong class="veh-mini-val" id="vehKpiFuel">$ 55.000</strong>
+            <span class="veh-mini-sub" id="vehKpiFuelLiters">2 cargas registradas</span>
+          </div>
+        </div>
+        <div class="veh-mini-box">
+          <div class="veh-mini-ic maint">🔧</div>
+          <div>
+            <span class="veh-mini-lbl">Mantenciones y Taller</span>
+            <strong class="veh-mini-val" id="vehKpiMaintenance">$ 290.000</strong>
+            <span class="veh-mini-sub" id="vehKpiMaintenanceCount">4 servicios</span>
+          </div>
+        </div>
+        <div class="veh-mini-box">
+          <div class="veh-mini-ic clean">🧼</div>
+          <div>
+            <span class="veh-mini-lbl">Limpieza y Detailing</span>
+            <strong class="veh-mini-val" id="vehKpiCleaning">$ 0</strong>
+            <span class="veh-mini-sub" id="vehKpiCleaningCount">0 cuidados</span>
+          </div>
+        </div>
+        <div class="veh-mini-box">
+          <div class="veh-mini-ic month">📅</div>
+          <div>
+            <span class="veh-mini-lbl">Gastos Este Mes</span>
+            <strong class="veh-mini-val" id="vehKpiMonth">$ 105.000</strong>
+            <span class="veh-mini-sub" id="vehKpiMonthLabel">Noviembre 2026</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Control de Conducción en Uber + Métricas por Viaje y Hora (Foto 4 Mejorada) -->
+      <div class="veh-uber-banner">
+        <div class="veh-uber-head">
+          <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <span style="font-size: 1.5rem;">🚕</span>
+            <div>
+              <h4 class="veh-uber-title">Control de Conducción en Uber</h4>
+              <p class="veh-uber-sub">Control de ingresos generados vs gastos de combustible y peajes del Mazda Axela</p>
+            </div>
+          </div>
+          <span class="veh-uber-pill">Plataforma Uber Activa</span>
+        </div>
+
+        <div class="veh-uber-kpis">
+          <div class="veh-uber-kpi-card">
+            <span class="veh-uber-kpi-lbl">📈 Ganancias Brutas Uber:</span>
+            <strong class="veh-uber-kpi-val pos" id="uberKpiGrossEarnings">+ $ 118.048</strong>
+            <span class="veh-uber-kpi-sub" id="uberKpiTripsCount">45 viajes registrados</span>
+          </div>
+          <div class="veh-uber-kpi-card">
+            <span class="veh-uber-kpi-lbl">⛽ Gastos de Conducción (Bencina+TAG):</span>
+            <strong class="veh-uber-kpi-val neg" id="uberKpiDrivingExpenses">- $ 55.000</strong>
+            <span class="veh-uber-kpi-sub">Combustible y peajes imputables</span>
+          </div>
+          <div class="veh-uber-kpi-card">
+            <span class="veh-uber-kpi-lbl">✨ Ganancia Limpia Real:</span>
+            <strong class="veh-uber-kpi-val pos" id="uberKpiNetProfit">+$ 63.048</strong>
+            <span class="veh-uber-kpi-sub" id="uberKpiProfitMargin" style="color: #10b981; font-weight: 700;">Margen de Ganancia: 53%</span>
+          </div>
+          <div class="veh-uber-kpi-card">
+            <span class="veh-uber-kpi-lbl">⚡ Rendimiento Promedio:</span>
+            <strong class="veh-uber-kpi-val" style="color: #38bdf8; font-size: 1.15rem;" id="uberKpiAvgPerTrip">$ 2.623 / viaje</strong>
+            <span class="veh-uber-kpi-sub" id="uberKpiAvgPerHour">≈ $ 7.870 por hora conectado</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Buscador, Filtros y Tabla de Movimientos del Auto (Foto 5) -->
+      <div class="veh-logs-card">
+        <div class="veh-logs-header">
+          <h3>📋 Historial del Vehículo y Turnos Uber (9 registros protegidos)</h3>
+          <button class="mg-btn-outline" id="btnExportVehicleExcel">📊 Exportar Excel</button>
+        </div>
+
+        <div class="mg-search-row" style="margin-bottom: 0.75rem;">
+          <span class="mg-search-icon">🔍</span>
+          <input type="text" id="inputSearchVehicle" class="mg-search-input" placeholder="Buscar por detalle, taller, producto o estación...">
+        </div>
+
+        <div class="veh-filter-pills" id="vehicleFilterPillsContainer">
+          <button class="filter-pill active" data-veh-filter="ALL">Todos (<span id="countVehAll">9</span>)</button>
+          <button class="filter-pill" data-veh-filter="combustible">⛽ Bencina (<span id="countVehFuel">2</span>)</button>
+          <button class="filter-pill" data-veh-filter="mantencion">🔧 Mantención (<span id="countVehMaint">4</span>)</button>
+          <button class="filter-pill" data-veh-filter="limpieza">🧼 Limpieza (<span id="countVehClean">0</span>)</button>
+          <button class="filter-pill" data-veh-filter="documentos">📄 Documentos (<span id="countVehDocs">0</span>)</button>
+          <button class="filter-pill" data-veh-filter="repuestos">🚗 Repuestos (<span id="countVehParts">0</span>)</button>
+          <button class="filter-pill" data-veh-filter="peajes">🛣️ Peajes (<span id="countVehTolls">0</span>)</button>
+          <button class="filter-pill" data-veh-filter="uber_income">🚕 Ingresos Uber (<span id="countVehUber">3</span>)</button>
+          <button class="filter-pill" data-veh-filter="otros">💡 Otros (<span id="countVehOthers">0</span>)</button>
+        </div>
+
+        <div class="veh-table-scroll">
+          <table class="veh-table">
+            <thead>
+              <tr>
+                <th>FECHA</th>
+                <th>CATEGORÍA</th>
+                <th>DETALLE / CONCEPTO</th>
+                <th>KILOMETRAJE</th>
+                <th>EXTRA / PRÓX.</th>
+                <th>MONTO</th>
+                <th>ACCIONES</th>
+              </tr>
+            </thead>
+            <tbody id="vehicleTableBody">
+              <!-- Renderizado en app.js -->
+            </tbody>
+          </table>
+        </div>
+
+        <div id="vehicleEmptyState" style="display: none; text-align: center; padding: 2rem;">
+          <p>No hay movimientos para este filtro.</p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ====================================================================
+         PESTAÑA 3: DEUDAS Y TARJETAS DE CRÉDITO (SEPARADAS - FOTO 4 DE TARJETAS)
+         ==================================================================== -->
+    <section class="tab-content-pane" id="tabPaneDebts">
+
+      <div class="debts-header-banner">
+        <div>
+          <span class="debts-tag-isolated">🔒 SEPARADAS DE TUS GASTOS DIARIOS (NO DESCUENTAN TU SALDO)</span>
+          <h2>💳 Mis 5 Tarjetas con Deuda (Por Pagar Más Adelante)</h2>
+          <p>
+            Aquí están cargadas tus 5 tarjetas de las capturas (<strong>Falabella $210.000</strong>, <strong>Santander $300.000</strong>,
+            <strong>Tapp Avance Mamá $200.000</strong>, <strong>Nu Colombia $600.000 COP ≈ $144.000 CLP</strong> y <strong>Use Tarjeta Mamá BancoEstado $1.000.000</strong>).
+          </p>
+        </div>
+        <div class="debts-header-actions">
+          <button class="btn-veh btn-veh-exp" id="btnOpenAddCardDebtModal">＋ Anotar Cargo en Tarjeta</button>
+          <button class="btn-veh btn-veh-cfg" id="btnOpenAddLongTermDebtModal">⏳ Nueva Deuda Extra</button>
+          <button class="btn-veh btn-veh-cfg" id="btnOpenAddCardModal">💳 Nueva Tarjeta</button>
+        </div>
+      </div>
+
+      <!-- Resumen exclusivo de Deudas (Separado) -->
+      <div class="debts-kpi-strip">
+        <div class="debts-kpi-box">
+          <span class="debts-kpi-lbl">Deuda en tus 4 Tarjetas CLP</span>
+          <strong class="debts-kpi-val danger" id="kpiIsolatedCardsCLP">$ 1.710.000</strong>
+          <span class="debts-kpi-sub">Mamá BE ($1M) + Santander ($300k) + CMR ($210k) + Tapp ($200k)</span>
+        </div>
+        <div class="debts-kpi-box">
+          <span class="debts-kpi-lbl">Deuda Nu Colombia (600.000 COP)</span>
+          <strong class="debts-kpi-val" style="color: #a855f7;" id="kpiIsolatedNuCLP">$ 144.000</strong>
+          <span class="debts-kpi-sub">Disponible en Nu: $ 400.000 COP (≈ $ 96.000 CLP)</span>
+        </div>
+        <div class="debts-kpi-box">
+          <span class="debts-kpi-lbl">Total Deuda Tarjetas (Congelada)</span>
+          <strong class="debts-kpi-val danger" id="kpiIsolatedTotalDebt">$ 1.854.000</strong>
+          <span class="debts-kpi-sub">100% separada de tus gastos e ingresos diarios</span>
+        </div>
+      </div>
+
+      <!-- Bloque 1: Las 5 Tarjetas con Diseño Visual (Idénticas a tu Foto 4 de Tarjetas) -->
+      <div class="section-block">
+        <div class="section-block-head">
+          <h3>🔴 Tus 5 Tarjetas en Deuda (Pausadas / Todavía No Pagar)</h3>
+          <span class="section-sub-hint">Puedes abonarles de a poco o modificar su deuda/cupo cuando quieras</span>
+        </div>
+        <div class="cards-visual-grid" id="creditCardsGridContainer">
+          <!-- Renderizado en app.js con las fotos reales de Falabella, Santander, Tapp, Nu y BancoEstado Mamá -->
+        </div>
+      </div>
+
+      <!-- Bloque 2: Los 5 Cargos "Por Pagar" de tus Fotos 1 y 2 -->
+      <div class="section-block" style="margin-top: 1.75rem;">
+        <div class="section-block-head">
+          <div>
+            <h3>🧾 Detalle de Cargos "⏳ Por Pagar" en Tarjetas (Separados de Mis Gastos)</h3>
+            <span class="section-sub-hint">Cargos registrados el 02/11/2026 que aún no vas a pagar</span>
+          </div>
+          <button class="mg-btn-outline" onclick="openQuickAddModal('DEUDA_TARJETA')">＋ Agregar Otro Cargo</button>
+        </div>
+        <div class="card-debts-list" id="cardDebtsListContainer">
+          <!-- Renderizado en app.js -->
+        </div>
+      </div>
+
+      <!-- Bloque 3: Otras Deudas a Largo Plazo -->
+      <div class="section-block" style="margin-top: 1.75rem;">
+        <div class="section-block-head">
+          <div>
+            <h3>⏳ Otros Préstamos o Deudas a Plazo</h3>
+            <span class="section-sub-hint">Para anotar cualquier otra deuda externa o familiar</span>
+          </div>
+          <button class="mg-btn-outline" onclick="openAddLongTermDebtModal()">＋ Nueva Deuda</button>
+        </div>
+        <div class="longterm-minimal-grid" id="longtermDebtsGridContainer">
+          <!-- Renderizado en app.js -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ====================================================================
+         PESTAÑA 4 (NUEVA MEJORA): "🤝 ME DEBEN / POR COBRAR"
+         (Tía Ceci Plan Claro $33.003, Devolución Chicas Disco, etc.)
+         ==================================================================== -->
+    <section class="tab-content-pane" id="tabPaneReceivables">
+
+      <div class="debts-header-banner" style="border-left-color: #f59e0b;">
+        <div>
+          <span class="debts-tag-isolated" style="background: rgba(245, 158, 11, 0.16); color: #d97706;">🤝 CONTROL DE PLATA QUE TE DEBEN</span>
+          <h2>🤝 ¿Quién me debe plata? (Cuentas por Cobrar)</h2>
+          <p>
+            Como pagaste el <strong>Plan Claro de la Tía Ceci ($33.003)</strong> y compras compartidas como la <strong>Disco ($64.000 donde lo tuyo fue $24.000)</strong>,
+            aquí llevas el control exacto para que no se te olvide cobrarles.
+          </p>
+        </div>
+        <div class="debts-header-actions">
+          <button class="btn-veh btn-veh-fuel" id="btnOpenAddReceivableModal">＋ Anotar Quién Me Debe</button>
+        </div>
+      </div>
+
+      <div class="debts-kpi-strip">
+        <div class="debts-kpi-box">
+          <span class="debts-kpi-lbl">⏳ Pendiente por Cobrar</span>
+          <strong class="debts-kpi-val warning" id="kpiReceivablesPending">$ 33.003</strong>
+          <span class="debts-kpi-sub">Plata que aún te tienen que devolver</span>
+        </div>
+        <div class="debts-kpi-box">
+          <span class="debts-kpi-lbl">✅ Ya me Devolvieron / Cobrado</span>
+          <strong class="debts-kpi-val" style="color: #10b981;" id="kpiReceivablesCollected">$ 40.000</strong>
+          <span class="debts-kpi-sub">Devolución chicas disco recuperada</span>
+        </div>
+      </div>
+
+      <div class="card-debts-list" id="receivablesListContainer">
+        <!-- Renderizado dinámicamente en app.js -->
+      </div>
+
+    </section>
+
+    <!-- ====================================================================
+         PESTAÑA 5: MIS CUENTAS Y EFECTIVO (PLATA QUE TENGO DISPONIBLE)
+         ==================================================================== -->
+    <section class="tab-content-pane" id="tabPaneAccounts">
+
+      <div class="debts-header-banner accounts-banner">
+        <div>
+          <span class="debts-tag-isolated" style="background: rgba(16, 185, 129, 0.2); color: #059669;">💵 DINERO PROPIO DISPONIBLE</span>
+          <h2>🏦 Mis Cuentas de Uso Diario (CuentaRUT y Efectivo)</h2>
+          <p>
+            Tu dinero real para el día a día. Totalmente separado de las 5 tarjetas en deuda.
+          </p>
+        </div>
+        <div class="debts-header-actions">
+          <button class="btn-veh btn-veh-uber" id="btnQuickAdjustBalances">✏️ Ajustar Mis Saldos</button>
+          <button class="btn-veh btn-veh-cfg" id="btnQuickAddAccount">＋ Agregar Cuenta</button>
+        </div>
+      </div>
+
+      <div class="debts-kpi-strip" style="margin-bottom: 1.5rem;">
+        <div class="debts-kpi-box">
+          <span class="debts-kpi-lbl">Total Plata en Cuentas y Efectivo</span>
+          <strong class="debts-kpi-val" style="color: #10b981;" id="bannerTotalLiquid">$ 0</strong>
+          <span class="debts-kpi-sub">Suma de tus saldos disponibles</span>
+        </div>
+        <div class="debts-kpi-box">
+          <span class="debts-kpi-lbl">Ingresos Registrados</span>
+          <strong class="debts-kpi-val" id="bannerTotalIncomes">$ 0</strong>
+          <span class="debts-kpi-sub">Incluye turnos Uber y transferencias</span>
+        </div>
+        <div class="debts-kpi-box">
+          <span class="debts-kpi-lbl">Gastos Pagados Registrados</span>
+          <strong class="debts-kpi-val danger" id="bannerTotalDailyExpenses">$ 0</strong>
+          <span class="debts-kpi-sub">Sin contar las 5 tarjetas en deuda</span>
+        </div>
+      </div>
+
+      <div class="cards-minimal-grid" id="debitCardsGridContainer">
+        <!-- Renderizado en app.js -->
+      </div>
+
+    </section>
+
+    <!-- ====================================================================
+         PESTAÑA 6: GRÁFICOS E INFORMES
+         ==================================================================== -->
+    <section class="tab-content-pane" id="tabPaneCharts">
+      <div class="section-block-head" style="margin-bottom: 1rem;">
+        <h2>📊 Gráficos e Informes</h2>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="mg-btn-outline" id="btnExportExcel">📥 Exportar Gastos (Excel)</button>
+          <button class="mg-btn-outline" onclick="openModal('modalSettings')">💾 Copia de Seguridad</button>
+        </div>
+      </div>
+
+      <div class="charts-minimal-grid">
+        <div class="chart-minimal-card">
+          <h3>🍔 Gastos Pagados por Categoría</h3>
+          <div class="chart-box-canvas">
+            <canvas id="chartExpensesByCategory"></canvas>
+          </div>
+        </div>
+        <div class="chart-minimal-card">
+          <h3>💳 Tus 5 Tarjetas en Deuda (CLP)</h3>
+          <div class="chart-box-canvas">
+            <canvas id="chartDebtsByCard"></canvas>
+          </div>
+        </div>
+        <div class="chart-minimal-card">
+          <h3>🚗 Gastos del Mazda Axela por Categoría</h3>
+          <div class="chart-box-canvas">
+            <canvas id="chartVehicleCategories"></canvas>
+          </div>
+        </div>
+        <div class="chart-minimal-card">
+          <h3>🚕 Gastos Auto vs Ganancias Uber</h3>
+          <div class="chart-box-canvas">
+            <canvas id="chartVehicleEvolution"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================================================================
+       BARRA DE NAVEGACIÓN INFERIOR (IDÉNTICA A FOTO 3 CON BOTÓN + AMARILLO)
+       ====================================================================== -->
+  <nav class="mg-bottom-dock">
+    <button class="mg-dock-item active" id="navMobileHome" data-tab="tab-dashboard">
+      <span class="mg-dock-icon">📋</span>
+      <span class="mg-dock-label">Mis Gastos</span>
+    </button>
+    <button class="mg-dock-item" id="navMobileVehicle" data-tab="tab-vehicle">
+      <span class="mg-dock-icon">🚗</span>
+      <span class="mg-dock-label">Auto/Uber</span>
+    </button>
+    <button class="mg-dock-fab" id="navMobileAdd" title="Agregar Gasto, Ingreso o Deuda">
+      <span>＋</span>
+    </button>
+    <button class="mg-dock-item" id="navMobileDebts" data-tab="tab-debts">
+      <span class="mg-dock-icon">💳</span>
+      <span class="mg-dock-label">Deudas (5)</span>
+    </button>
+    <button class="mg-dock-item" id="navMobileReceivables" data-tab="tab-receivables">
+      <span class="mg-dock-icon">🤝</span>
+      <span class="mg-dock-label">Me Deben</span>
+    </button>
+  </nav>
+
+  <!-- ======================================================================
+       MODAL PRINCIPAL: "AGREGAR" (IDÉNTICO A FOTOS 1 Y 2 CON CHIPS RÁPIDOS)
+       ====================================================================== -->
+  <div class="modal-backdrop" id="modalAddExpense">
+    <div class="mg-add-sheet">
+
+      <!-- Cabecera Amarilla "Agregar" (Fotos 1 y 2) -->
+      <div class="mg-add-sheet-header">
+        <div class="mg-add-top-bar">
+          <button type="button" class="mg-cancel-link" id="btnCloseExpenseModal">Cancelar</button>
+          <h3 class="mg-add-sheet-title" id="lblQuickModalTitle">Agregar</h3>
+          <span class="mg-selected-cat-pill" id="lblQuickSelectedCategory">Alimentos</span>
+        </div>
+
+        <!-- Selector Segmentado: Gasto | Ingreso | Deuda Tarjeta -->
+        <div class="mg-segmented-tabs">
+          <button type="button" class="mg-seg-btn active" data-add-mode="GASTO" id="segBtnGasto">Gasto</button>
+          <button type="button" class="mg-seg-btn" data-add-mode="INGRESO" id="segBtnIngreso">Ingreso</button>
+          <button type="button" class="mg-seg-btn" data-add-mode="DEUDA_TARJETA" id="segBtnDeuda">Deuda / Tarjeta</button>
+        </div>
+      </div>
+
+      <!-- Cuerpo con Cuadrícula de Categorías (4 por fila como en Fotos 1 y 2) -->
+      <div class="mg-add-sheet-body">
+        <div class="mg-cat-grid" id="quickCategoriesGrid">
+          <!-- Renderizado dinámicamente en app.js -->
+        </div>
+      </div>
+
+      <!-- Barra Inferior Minimalista "¿Para qué y cuánto cuesta?" + Botones Rápidos de Monto -->
+      <form id="formQuickMovement" class="mg-add-bottom-bar">
+        <input type="hidden" id="quickEditIdInput" value="">
+        <input type="hidden" id="quickModeInput" value="GASTO">
+        <input type="hidden" id="quickCategoryInput" value="alimentos">
+
+        <!-- Chips de Monto Rápido (+1.000, +5.000, +10.000, +20.000, +50.000) -->
+        <div class="mg-quick-amount-chips">
+          <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">Rápido:</span>
+          <button type="button" class="amt-chip" data-add-amt="1000">+$1k</button>
+          <button type="button" class="amt-chip" data-add-amt="5000">+$5k</button>
+          <button type="button" class="amt-chip" data-add-amt="10000">+$10k</button>
+          <button type="button" class="amt-chip" data-add-amt="20000">+$20k</button>
+          <button type="button" class="amt-chip" data-add-amt="50000">+$50k</button>
+          <button type="button" class="amt-chip clear" id="btnClearQuickAmt">Limpiar</button>
+        </div>
+
+        <!-- Fila de Cuenta / Fecha / Opciones según modo -->
+        <div class="mg-bottom-meta-row">
+          <div class="mg-meta-field">
+            <label id="lblQuickAccountSelect">🏦 Medio:</label>
+            <select id="quickAccountSelect" class="mg-mini-select"></select>
+          </div>
+
+          <div class="mg-meta-field" id="wrapQuickInstallments" style="display: none;">
+            <label>⚡ Cuotas:</label>
+            <select id="quickInstallmentsSelect" class="mg-mini-select">
+              <option value="1">Contado (Por pagar)</option>
+              <option value="3">3 cuotas</option>
+              <option value="6">6 cuotas</option>
+              <option value="12">12 cuotas</option>
+            </select>
+          </div>
+
+          <div class="mg-meta-field">
+            <label>📅</label>
+            <input type="date" id="quickDateInput" class="mg-mini-date" required>
+          </div>
+        </div>
+
+        <!-- Cápsula principal "¿Para qué y cuánto cuesta?" -->
+        <div class="mg-input-capsule">
+          <input
+            type="text"
+            id="quickNoteInput"
+            class="mg-capsule-note"
+            placeholder="¿Para qué? (Ej: Gasolina, Pago Claro, Salida...)"
+          >
+          <div class="mg-capsule-amount-box">
+            <span class="mg-currency-sign">$</span>
+            <input
+              type="text"
+              inputmode="numeric"
+              id="quickAmountInput"
+              class="mg-capsule-amount"
+              placeholder="Monto o 20000+5000"
+              required
+            >
+          </div>
+          <button type="submit" class="mg-capsule-submit" title="Guardar">
+            ✓
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL NUEVO: ANOTAR "🤝 QUIÉN ME DEBE PLATA"
+       ====================================================================== -->
+  <div class="modal-backdrop" id="modalAddReceivable">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>🤝 Anotar Quién Me Debe Plata</h3>
+        <button class="btn-icon" id="btnCloseReceivableModal">✕</button>
+      </div>
+      <form id="formAddReceivable">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="recPerson">👤 ¿Quién te debe? *</label>
+            <input type="text" id="recPerson" class="form-input" placeholder="Ej: Tía Ceci, Amigo, Hermano..." required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="recReason">📝 ¿Por qué concepto? *</label>
+            <input type="text" id="recReason" class="form-input" placeholder="Ej: Pago Plan Claro, Entrada disco, Préstamo..." required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="recAmount">💵 Monto que te debe ($ CLP) *</label>
+              <input type="number" id="recAmount" class="form-input" placeholder="Ej: 33003" min="1" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="recDate">📅 Fecha *</label>
+              <input type="date" id="recDate" class="form-input" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelReceivableModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">💾 Guardar Cuenta por Cobrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL: ABONAR / REBAJAR DEUDA DE UNA TARJETA DE CRÉDITO
+       ====================================================================== -->
+  <div class="modal-backdrop" id="modalPayCardDebt">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>📉 Abonar / Rebajar Deuda de Tarjeta</h3>
+        <button class="btn-icon" id="btnClosePayCardDebtModal">✕</button>
+      </div>
+      <form id="formPayCardDebt">
+        <input type="hidden" id="payCardDebtId">
+        <div class="modal-body">
+          <div style="margin-bottom: 0.5rem;">
+            <strong id="lblPayCardName" style="font-size: 1.05rem;">Tarjeta</strong>
+            <div id="lblPayCardCurrentDebt" style="font-size: 0.82rem; color: var(--text-secondary);"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="payCardAmount">💵 Monto a Abonar / Rebajar *</label>
+              <input type="number" id="payCardAmount" class="form-input" min="1" step="any" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="payCardDate">📅 Fecha</label>
+              <input type="date" id="payCardDate" class="form-input" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; cursor: pointer;">
+              <input type="checkbox" id="payCardRecordAsDailyExpense">
+              Registrar también este pago como salida en "Mis Gastos"
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelPayCardDebtModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">💾 Confirmar Abono a Tarjeta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL: EDITAR TARJETA / MODIFICAR DEUDA ACTUAL Y CUPO
+       ====================================================================== -->
+  <div class="modal-backdrop" id="modalEditCard">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>✏️ Editar Tarjeta / Deuda o Saldo</h3>
+        <button class="btn-icon" id="btnCloseEditCardModal">✕</button>
+      </div>
+      <form id="formEditCard">
+        <input type="hidden" id="editCardId">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="editCardName">🏷️ Nombre de la Tarjeta o Cuenta *</label>
+            <input type="text" id="editCardName" class="form-input" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="editCardBank">🏦 Banco / Entidad</label>
+              <input type="text" id="editCardBank" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="editCardType">📌 Tipo</label>
+              <select id="editCardType" class="form-select">
+                <option value="Crédito">Tarjeta en Deuda (Separada de Mis Gastos)</option>
+                <option value="Débito">Tarjeta de Débito (Plata propia)</option>
+                <option value="Efectivo">Billetera de Efectivo</option>
+                <option value="Prepago">Cuenta Prepago / Digital</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="editCardUsedLimit" id="lblEditUsedLimit">🔴 Deuda Utilizada ($) *</label>
+              <input type="number" id="editCardUsedLimit" class="form-input" min="0" step="any" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="editCardTotalLimit" id="lblEditLimit">💰 Cupo Total / Saldo ($) *</label>
+              <input type="number" id="editCardTotalLimit" class="form-input" min="0" step="any" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="editCardLastDigits">🔢 Últimos 4 dígitos</label>
+              <input type="text" id="editCardLastDigits" class="form-input" maxlength="4">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="editCardDueDay">📅 Día de Vencimiento</label>
+              <input type="number" id="editCardDueDay" class="form-input" min="1" max="31">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelEditCardModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">💾 Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL: AGREGAR NUEVA TARJETA O CUENTA
+       ====================================================================== -->
+  <div class="modal-backdrop" id="modalAddCard">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>💳 Nueva Tarjeta o Cuenta</h3>
+        <button class="btn-icon" id="btnCloseCardModal">✕</button>
+      </div>
+      <form id="formAddCard">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="cardName">🏷️ Nombre de la Tarjeta *</label>
+            <input type="text" id="cardName" class="form-input" placeholder="Ej: USE TARJETA MAMA, CMR Falabella..." required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="cardBank">🏦 Banco / Entidad</label>
+              <select id="cardBank" class="form-select">
+                <option value="BancoEstado">BancoEstado</option>
+                <option value="Falabella">CMR Falabella</option>
+                <option value="Santander">Santander</option>
+                <option value="Tapp Caja Los Andes">Tapp Caja Los Andes</option>
+                <option value="Nu Colombia">Nu Colombia (COP)</option>
+                <option value="BCI">BCI</option>
+                <option value="Scotiabank">Scotiabank</option>
+                <option value="Banco de Chile">Banco de Chile</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Otra">Otra</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cardType">📌 Tipo</label>
+              <select id="cardType" class="form-select">
+                <option value="Crédito">Crédito / Deuda (Separada)</option>
+                <option value="Débito">Débito (Mi Plata)</option>
+                <option value="Efectivo">Efectivo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="cardUsedLimit">🔴 Deuda Utilizada ($)</label>
+              <input type="number" id="cardUsedLimit" class="form-input" value="0" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cardTotalLimit">💰 Cupo Total o Saldo ($) *</label>
+              <input type="number" id="cardTotalLimit" class="form-input" placeholder="Ej: 1000000" min="0" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="cardLastDigits">🔢 Últimos 4 dígitos</label>
+              <input type="text" id="cardLastDigits" class="form-input" placeholder="0000" maxlength="4">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cardDueDay">📅 Día Vencimiento</label>
+              <input type="number" id="cardDueDay" class="form-input" placeholder="Ej: 5" min="1" max="31">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelCardModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">💾 Guardar Tarjeta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL: AJUSTAR SALDOS DE CUENTAS (PLATA QUE TENGO)
+       ====================================================================== -->
+  <div class="modal-backdrop" id="modalAdjustBalances">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>⚡ Ajustar Saldos Disponibles</h3>
+        <button class="btn-icon" id="btnCloseAdjustBalancesModal">✕</button>
+      </div>
+      <form id="formAdjustBalances">
+        <div class="modal-body">
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+            Ingresa la plata real que tienes hoy en cada cuenta o billetera:
+          </p>
+          <div id="adjustBalancesInputsContainer" style="display: flex; flex-direction: column; gap: 0.85rem;"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelAdjustBalancesModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">💾 Guardar Saldos</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL: TASA DE CAMBIO NU COLOMBIA (COP A CLP)
+       ====================================================================== -->
+  <div class="modal-backdrop" id="modalEditExchangeRate">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>🇨🇴 Tasa de Cambio Nu Colombia (COP a CLP)</h3>
+        <button class="btn-icon" id="btnCloseExchangeRateModal">✕</button>
+      </div>
+      <form id="formEditExchangeRate">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="inputExchangeRateCop">1 Peso Colombiano (COP) equivale a ($ CLP):</label>
+            <input type="number" id="inputExchangeRateCop" class="form-input" step="0.001" min="0.01" max="10" value="0.24" required>
+          </div>
+          <div id="ratePreviewBox" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+            600.000 COP ≈ $ 144.000 CLP
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelExchangeRateModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">💾 Guardar Tasa</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL: NUEVA DEUDA A LARGO PLAZO / DIFERIDA
+       ====================================================================== -->
+  <div class="modal-backdrop" id="modalAddLongTermDebt">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>⏳ Deuda a Largo Plazo / Por Pagar Después</h3>
+        <button class="btn-icon" id="btnCloseLongTermDebtModal">✕</button>
+      </div>
+      <form id="formAddLongTermDebt">
+        <input type="hidden" id="editLongTermDebtId">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="ltdTitle">🏷️ Nombre de la Deuda *</label>
+            <input type="text" id="ltdTitle" class="form-input" placeholder="Ej: Préstamo Familiar, Arreglo..." required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="ltdCreditor">👤 Acreedor / Familiar *</label>
+              <input type="text" id="ltdCreditor" class="form-input" placeholder="Ej: Mamá, Familiar, Banco" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ltdTotalAmount">💰 Monto Original ($ CLP) *</label>
+              <input type="number" id="ltdTotalAmount" class="form-input" placeholder="Ej: 500000" min="1" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="ltdRemainingAmount">💵 Saldo Pendiente Actual ($ CLP) *</label>
+              <input type="number" id="ltdRemainingAmount" class="form-input" placeholder="Ej: 380000" min="0" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ltdMinPayment">⚡ Cuota o Abono Planeado ($ CLP)</label>
+              <input type="number" id="ltdMinPayment" class="form-input" placeholder="Ej: 30000" min="0">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="ltdStartDate">📅 Fecha Inicio</label>
+              <input type="date" id="ltdStartDate" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ltdDueDate">🚨 Fecha Estimada Término</label>
+              <input type="date" id="ltdDueDate" class="form-input">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ltdNotes">📝 Notas</label>
+            <input type="text" id="ltdNotes" class="form-input" placeholder="Ej: Todavía no la voy a pagar">
+          </div>
+          <input type="checkbox" id="ltdIncludeInTotal" style="display:none;">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelLongTermDebtModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">💾 Guardar Deuda</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL: REGISTRAR ABONO A DEUDA
+       ====================================================================== -->
+  <div class="modal-backdrop" id="modalAddDebtPayment">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>💵 Registrar Abono a Deuda</h3>
+        <button class="btn-icon" id="btnCloseDebtPaymentModal">✕</button>
+      </div>
+      <form id="formAddDebtPayment">
+        <input type="hidden" id="paymentDebtId">
+        <div class="modal-body">
+          <div style="margin-bottom: 0.75rem;">
+            <strong id="lblPaymentDebtName">Deuda</strong>
+            <div id="lblPaymentDebtRemaining" style="font-size: 0.82rem; color: var(--text-secondary);"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="paymentAmount">💰 Monto del Abono ($ CLP) *</label>
+              <input type="number" id="paymentAmount" class="form-input" min="1" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="paymentDate">📅 Fecha *</label>
+              <input type="date" id="paymentDate" class="form-input" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="paymentAccount">🏦 Cuenta de origen</label>
+            <select id="paymentAccount" class="form-select"></select>
+          </div>
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; cursor: pointer;">
+              <input type="checkbox" id="paymentAutoDeduct" checked>
+              Descontar del saldo de la cuenta seleccionada
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="paymentNote">📝 Nota</label>
+            <input type="text" id="paymentNote" class="form-input" placeholder="Abono">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelDebtPaymentModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">💾 Confirmar Abono</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODALES DE VEHÍCULO (MAZDA AXELA VFCW14 & UBER)
+       ====================================================================== -->
+  <div class="modal-backdrop" id="modalFastFuel">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>⛽ Bencina Rápida — Mazda Axela (VFCW14)</h3>
+        <button class="btn-icon" id="btnCloseFastFuelModal">✕</button>
+      </div>
+      <form id="formFastFuel">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="fuelTotalAmount">💵 Monto Pagado ($ CLP) *</label>
+              <input type="number" id="fuelTotalAmount" class="form-input" placeholder="Ej: 35000" min="1" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="fuelDate">📅 Fecha *</label>
+              <input type="date" id="fuelDate" class="form-input" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="fuelStation">🏪 Detalle / Estación</label>
+              <input type="text" id="fuelStation" class="form-input" value="GASOLINA SHELL" placeholder="Ej: GASOLINA SHELL">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="fuelOdometer">🏁 Odómetro (km)</label>
+              <input type="number" id="fuelOdometer" class="form-input" value="142500">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="fuelAccount">💳 Medio de Pago</label>
+            <select id="fuelAccount" class="form-select"></select>
+          </div>
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; cursor: pointer;">
+              <input type="checkbox" id="fuelSyncGeneralExpense" checked>
+              Agregar también a la lista general de "Mis Gastos"
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelFastFuelModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">⛽ Guardar Bencina</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modalAddVehicleExpense">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>🚗 Nuevo Gasto del Auto — Mazda Axela</h3>
+        <button class="btn-icon" id="btnCloseVehicleExpenseModal">✕</button>
+      </div>
+      <form id="formAddVehicleExpense">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="vehExpCategory">🏷️ Categoría *</label>
+            <select id="vehExpCategory" class="form-select">
+              <option value="mantencion">🔧 Mantención / Taller</option>
+              <option value="combustible">⛽ Bencina / Combustible</option>
+              <option value="limpieza">🧼 Limpieza / Detailing</option>
+              <option value="documentos">📄 Documentos</option>
+              <option value="repuestos">🚗 Repuestos / Accesorios</option>
+              <option value="peajes">🛣️ Peajes / TAG</option>
+              <option value="otros">💡 Otros</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="vehExpDetail">📝 Detalle / Concepto *</label>
+            <input type="text" id="vehExpDetail" class="form-input" placeholder="Ej: ARREGLO BOTON BENCINA, PRODUCTOS DE LIMPIEZA..." required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="vehExpAmount">💵 Monto ($ CLP) *</label>
+              <input type="number" id="vehExpAmount" class="form-input" placeholder="Ej: 35000" min="1" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="vehExpDate">📅 Fecha *</label>
+              <input type="date" id="vehExpDate" class="form-input" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="vehExpOdometer">🏁 Kilometraje (km)</label>
+              <input type="number" id="vehExpOdometer" class="form-input" value="142500">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="vehExpAccount">💳 Pagado con</label>
+              <select id="vehExpAccount" class="form-select"></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; cursor: pointer;">
+              <input type="checkbox" id="vehExpSyncGeneral" checked>
+              Agregar también a la lista general de "Mis Gastos"
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelVehicleExpenseModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">💾 Guardar Gasto del Auto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modalAddUberShift">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>🚕 Registrar Turno / Ganancia Uber</h3>
+        <button class="btn-icon" id="btnCloseUberShiftModal">✕</button>
+      </div>
+      <form id="formAddUberShift">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="uberAmount">💰 Ganancia del Turno ($ CLP) *</label>
+              <input type="number" id="uberAmount" class="form-input" placeholder="Ej: 83322" min="1" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="uberDate">📅 Fecha *</label>
+              <input type="date" id="uberDate" class="form-input" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="uberTrips">🔢 Cantidad de Viajes</label>
+              <input type="number" id="uberTrips" class="form-input" value="15" min="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="uberHours">⏱️ Horas Conectado</label>
+              <input type="number" id="uberHours" class="form-input" step="0.5" value="5">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="uberOdometer">🏁 Kilometraje (km)</label>
+              <input type="number" id="uberOdometer" class="form-input" value="95000">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="uberAccount">🏦 Cuenta Destino</label>
+              <select id="uberAccount" class="form-select"></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; cursor: pointer;">
+              <input type="checkbox" id="uberSyncIncomeGeneral" checked>
+              Sumar también a los Ingresos de "Mis Gastos"
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelUberShiftModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">🚕 Guardar Turno Uber</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modalEditVehicle">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>⚙️ Datos del Vehículo — Mazda Axela</h3>
+        <button class="btn-icon" id="btnCloseEditVehicleModal">✕</button>
+      </div>
+      <form id="formEditVehicle">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="editVehModel">🚗 Modelo *</label>
+              <input type="text" id="editVehModel" class="form-input" value="Mazda Axela" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="editVehPlate">🏷️ Patente *</label>
+              <input type="text" id="editVehPlate" class="form-input" value="VFCW14" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="editVehYear">📅 Año</label>
+              <input type="number" id="editVehYear" class="form-input" value="2017">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="editVehColor">🎨 Color</label>
+              <input type="text" id="editVehColor" class="form-input" value="Rojo Soul Red">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="editVehOdometer">🏁 Odómetro (km)</label>
+              <input type="number" id="editVehOdometer" class="form-input" value="95000">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="editVehPurchasePrice">💰 Precio Compra Auto ($ CLP)</label>
+              <input type="number" id="editVehPurchasePrice" class="form-input" value="4800000">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="editVehAcquiredDate">📅 Fecha Adquisición</label>
+              <input type="date" id="editVehAcquiredDate" class="form-input" value="2026-10-22">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="editVehNextMaintenance">🛡️ Próxima Mantención (km)</label>
+              <input type="number" id="editVehNextMaintenance" class="form-input" value="105000">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelEditVehicleModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">💾 Guardar Datos del Auto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL: RESPALDO Y CONFIGURACIÓN
+       ====================================================================== -->
+  <div class="modal-backdrop" id="modalSettings">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>⚙️ Copias de Seguridad y Opciones</h3>
+        <button class="btn-icon" id="btnCloseSettingsModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">💾 Guardar / Restaurar Respaldo Completo (JSON)</label>
+          <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.6rem;">
+            Descarga una copia de todos tus gastos, tarjetas y datos del Mazda Axela para no perderlos nunca.
+          </p>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn btn-primary" id="btnDownloadJsonBackup">⬇️ Descargar Respaldo</button>
+            <label class="btn btn-secondary" style="cursor: pointer;">
+              ⬆️ Subir Respaldo
+              <input type="file" id="inputRestoreJson" accept=".json" style="display: none;">
+            </label>
+          </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 0.85rem 0;">
+
+        <div class="form-group">
+          <label class="form-label">📊 Exportar Planillas Excel (.csv)</label>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.4rem;">
+            <button class="btn btn-secondary" id="btnExportExcelFromSettings">📥 Excel de Mis Gastos</button>
+            <button class="btn btn-secondary" onclick="exportVehicleToCSV()">🚗 Excel del Mazda Axela</button>
+          </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 0.85rem 0;">
+
+        <div class="form-group">
+          <label class="form-label">🔄 Restaurar Tus Datos Protegidos (Tarjetas + Gastos + Mazda Axela VFCW14)</label>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+            Recarga todos los datos exactos de tus capturas (las 5 tarjetas en deuda, todos los gastos de Noviembre/Octubre, Tía Ceci y el Mazda Axela VFCW14):
+          </p>
+          <button class="btn btn-secondary" id="btnResetToDefaults" style="color: #ef4444; border-color: rgba(239,68,68,0.3);">
+            🔄 Recargar Todos Mis Datos Protegidos
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btnCloseSettingsModalFooter">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastNotification" class="mg-toast">
+    <span id="toastIcon">✅</span>
+    <span id="toastMsg">Guardado</span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
